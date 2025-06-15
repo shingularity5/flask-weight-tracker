@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>体重管理アプリ - HOME</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        body { font-family: sans-serif; margin: 20px; }
+        #graph { width: 80%; height: 400px; margin: 20px auto; border: 1px solid #ccc; }
+        .link-button { display: block; margin-top: 20px; }
+        table { width: 80%; margin: 20px auto; border-collapse: collapse; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .popup {
+            position: absolute;
+            background-color: white;
+            border: 1px solid #ccc;
+            padding: 5px;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+            z-index: 10;
+            display: none;
+            pointer-events: none; /* ポップアップ自体はクリックされないように */
+        }
+    </style>
+</head>
+<body>
+    <h1>体重管理アプリ</h1>
+
+    <div id="graph"></div>
+
+    <p><a href="{{ url_for('input_daily') }}" class="link-button">新たに記録</a></p>
+
+    <h2>過去の記録</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>日付</th>
+                <th>体重 (kg)</th>
+                <th>メモ</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for daily in dailies %}
+            <tr>
+                <td>{{ daily.date }}</td>
+                <td>{{ daily.weight }}</td>
+                <td>{{ daily.memo }}</td>
+                <td><a href="{{ url_for('edit_daily', daily_id=daily.id) }}">編集</a></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div id="custom-popup" class="popup"></div>
+
+    <script>
+        var dates = {{ dates | tojson }};
+        var weights = {{ weights | tojson }};
+        var memos = {{ memos | tojson }};
+        var dailyData = {{ dailies | tojson }}; // 全てのdailyデータを渡す
+
+        var trace = {
+            x: dates,
+            y: weights,
+            mode: 'lines+markers',
+            name: '体重推移',
+            hoverinfo: 'x+y' // 基本のホバー情報は表示
+        };
+
+        var layout = {
+            title: '体重推移グラフ',
+            xaxis: {
+                title: '日付',
+                tickformat: '%Y-%m-%d'
+            },
+            yaxis: {
+                title: '体重 (kg)'
+            },
+            hovermode: 'closest' // マウスに最も近いデータを強調
+        };
+
+        Plotly.newPlot('graph', [trace], layout);
+
+        var graphDiv = document.getElementById('graph');
+        var customPopup = document.getElementById('custom-popup');
+
+        graphDiv.on('plotly_hover', function(data){
+            if(data.points.length > 0){
+                var pointIndex = data.points[0].pointIndex;
+                var daily = dailyData[pointIndex];
+                
+                customPopup.innerHTML = `
+                    <strong>日付:</strong> ${daily.date}<br>
+                    <strong>体重:</strong> ${daily.weight} kg<br>
+                    <strong>メモ:</strong> ${daily.memo || 'なし'}
+                `;
+                customPopup.style.left = (data.event.x + 10) + 'px';
+                customPopup.style.top = (data.event.y + 10) + 'px';
+                customPopup.style.display = 'block';
+            }
+        });
+
+        graphDiv.on('plotly_unhover', function(){
+            customPopup.style.display = 'none';
+        });
+
+        graphDiv.on('plotly_click', function(data){
+            if(data.points.length > 0){
+                var pointIndex = data.points[0].pointIndex;
+                var daily = dailyData[pointIndex];
+                window.location.href = "{{ url_for('edit_daily', daily_id=0) }}".replace('/0', '/' + daily.id);
+            }
+        });
+
+    </script>
+</body>
+</html>

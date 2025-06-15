@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>体重記録 - 修正</title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; }
+        form div { margin-bottom: 10px; }
+        label { display: inline-block; width: 80px; }
+        input[type="date"], input[type="number"] { width: 150px; padding: 5px; }
+        textarea { width: 250px; height: 80px; padding: 5px; }
+        .error { color: red; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+    <h1>体重記録 修正</h1>
+
+    {% if error %}
+        <p class="error">{{ error }}</p>
+    {% endif %}
+
+    <form action="{{ url_for('edit_daily', daily_id=daily.id) }}" method="POST">
+        <div>
+            <label for="date">日付:</label>
+            <input type="date" id="date" name="date" value="{{ daily.date }}" required>
+        </div>
+        <div>
+            <label for="weight">体重 (kg):</label>
+            <input type="number" id="weight" name="weight" step="0.1" value="{{ daily.weight }}" required>
+        </div>
+        <div>
+            <label for="memo">メモ:</label>
+            <textarea id="memo" name="memo">{{ daily.memo }}</textarea>
+        </div>
+        <p>修正する際は入力内容を変更し、以下の再登録ボタンを押してください</p>
+        <div>
+            <button type="submit">再登録</button>
+        </div>
+    </form>
+
+    <p><a href="{{ url_for('index') }}">TOP</a></p>
+</body>
+</html>
