@@ -2,6 +2,6 @@ services:
   - type: web
     name: flask-weight-tracker
     env: python
-    buildCommand: "pip install -r requirements.txt"
+    buildCommand: "pip3 install -r requirements.txt"
     startCommand: "gunicorn app:app"
     plan: free
